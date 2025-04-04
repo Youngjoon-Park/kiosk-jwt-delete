@@ -10,60 +10,55 @@ function OrderDetailPage() {
   useEffect(() => {
     axios.get(`http://localhost:8081/api/admin/orders/${orderId}`)
       .then(res => {
-        console.log("✅ API 응답 데이터:", res.data); // ← 여기에 로그 추가!
+        console.log("✅ 주문 상세 응답:", res.data);
         setOrder(res.data);
       })
       .catch(err => {
-        console.error("상세 조회 실패:", err);
+        console.error("❌ 상세 조회 실패:", err);
         alert("상세 조회 실패");
       });
   }, [orderId]);
-  
 
-  const updateStatus = () => {
-    axios.patch(`http://localhost:8081/api/admin/orders/${orderId}/status`, null, {
-      params: { status: "COMPLETED" }
-    })
-      .then(() => {
-        alert("✅ 상태가 COMPLETED로 변경되었습니다.");
-        setOrder(prev => ({ ...prev, status: "COMPLETED" }));
-      })
-      .catch(err => {
-        console.error("상태 변경 실패:", err);
-        alert("❌ 상태 변경 실패");
+  const updateStatus = async () => {
+    try {
+      await axios.patch(`http://localhost:8081/api/admin/orders/${orderId}/status`, null, {
+        params: { status: "COMPLETED" }
       });
+      alert("✅ 상태 변경 완료");
+      setOrder(prev => ({ ...prev, status: "COMPLETED" }));
+    } catch (err) {
+      console.error("❌ 상태 변경 실패:", err);
+      alert("상태 변경 실패");
+    }
   };
 
-  if (!order) return <p>불러오는 중...</p>;
+  if (!order) return <p>📦 주문 정보를 불러오는 중입니다...</p>;
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>📋 주문 상세</h2>
-      <p>주문번호: {order.orderId}</p>
-      <p>총 금액: {order.totalPrice}원</p>
-      <p>상태: {order.status}</p>
+      <p>🆔 주문번호: {order.orderId}</p>
+      <p>💰 총 금액: {order.totalPrice.toLocaleString()}원</p>
+      <p>📌 상태: {order.status}</p>
 
-      <h4>🧾 항목</h4>
+      <h4>🧾 주문 항목</h4>
       <ul>
         {order.items.map((item, idx) => (
           <li key={idx}>
-            {item.menuName} / 수량: {item.quantity}개 / 단가: {item.price}원
+            {item.menuName} / 수량: {item.quantity}개 / 단가: {item.price.toLocaleString()}원
           </li>
         ))}
       </ul>
 
       {order.status === "PENDING" && (
-        <button
-          onClick={updateStatus}
-          style={{ marginTop: "20px", marginRight: "10px" }}
-        >
-          ✅ 상태 변경 (COMPLETED)
+        <button onClick={updateStatus} style={{ marginTop: "20px" }}>
+          ✅ 완료 처리(COMPLETED)
         </button>
       )}
 
       <br />
       <button onClick={() => navigate(-1)} style={{ marginTop: "20px" }}>
-        🔙 돌아가기
+        🔙 뒤로가기
       </button>
     </div>
   );
